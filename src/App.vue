@@ -1,32 +1,82 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, watch } from 'vue';
 
 const showForm = ref(false);
-
 const newNote = ref("");
-
+const newTitle = ref("");
 const notes = ref([]);
-
 const errorMsg = ref("");
+const selectedNote = ref(null);
 
-function addNotes(){
-  if(!newNote.value){
-    errorMsg.value = "Please enter a note";
+onMounted(() => {
+  const savedNotes = localStorage.getItem('notes');
+  if (savedNotes) {
+    notes.value = JSON.parse(savedNotes);
+  }
+});
+
+watch(notes, (newNotes) => {
+  localStorage.setItem('notes', JSON.stringify(newNotes));
+}, { deep: true });
+
+function addNotes() {
+  if (!newNote.value || !newTitle.value) {
+    errorMsg.value = "Please enter both title and note";
     return;
   }
+  const backgroundColor = getRandomColor();
+  const textColor = getContrastColor(backgroundColor);
+
   notes.value.push({
     id: Date.now(),
+    title: newTitle.value,
     note: newNote.value,
     date: new Date().toLocaleDateString('en-GB'),
-    backgroundColor: getRandomColor(),
+    backgroundColor,
+    textColor,
   });
 
   newNote.value = "";
+  newTitle.value = "";
   showForm.value = false;
 }
 
-function getRandomColor(){
-  return `#${Math.floor(Math.random()*16777215).toString(16)}`
+function getRandomColor() {
+  let color;
+  do {
+    color = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+  } while (isTooLight(color));
+  return color;
+}
+
+function isTooLight(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance > 200;
+}
+
+function getContrastColor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  
+  const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+  return luminance > 186 ? "#000000" : "#FFFFFF";
+}
+
+function deleteNote(id) {
+  notes.value = notes.value.filter(note => note.id !== id);
+}
+
+function showNoteDetail(note) {
+  selectedNote.value = note;
+}
+
+function closeNoteDetail() {
+  selectedNote.value = null;
 }
 
 </script>
@@ -36,14 +86,19 @@ function getRandomColor(){
     <div class="container">
       <header>
         <h1 class="title">My Note</h1>
-        <button @click="showForm = !showForm" class="add-btn" type="">+</button>
+        <button @click="showForm = !showForm" class="add-btn">+</button>
       </header>
       <div class="card-container">
-        <div v-for="note in notes" :key="note.id" class="card" :style="{'background-color': note.backgroundColor}">
-          <p class="card-content">
-            {{ note.note }}
-          </p>
-          <p class="card-date">{{ note.date }}</p>
+        <div 
+          v-for="note in notes" 
+          :key="note.id" 
+          class="card" 
+          :style="{ 'background-color': note.backgroundColor, color: note.textColor }" 
+          @click="showNoteDetail(note)"
+        >
+          <button @click.stop="deleteNote(note.id)" class="delete-btn">-</button>
+          <p class="card-content">{{ note.title }}</p>
+          <p class="card-date" :style="{ color: note.textColor }">{{ note.date }}</p>
         </div>
       </div>
     </div>
@@ -54,6 +109,12 @@ function getRandomColor(){
           &times;
         </button>
         <p v-if="errorMsg" class="form-error">{{ errorMsg }}</p>
+        <input
+          v-model="newTitle"
+          class="title-input"
+          type="text"
+          placeholder="Enter title here..."
+        />
         <textarea
           v-model="newNote"
           class="note"
@@ -64,6 +125,14 @@ function getRandomColor(){
           placeholder="Enter your note here..."
         ></textarea>
         <button @click="addNotes" class="form-save-btn">Save</button>
+      </div>
+    </div>
+    <div v-if="selectedNote" class="overlay" @click="closeNoteDetail">
+      <div class="note-detail" @click.stop>
+        <h2>{{ selectedNote.title }}</h2>
+        <p>{{ selectedNote.note }}</p>
+        <p class="card-date">{{ selectedNote.date }}</p>
+        <button @click="closeNoteDetail" class="close-detail-btn">&times;</button>
       </div>
     </div>
   </main>
@@ -116,15 +185,43 @@ header {
 
 .card {
   width: 225px;
-  height: 225px;
-  background-color: #223358;
+  height: 150px;
   border-radius: 10px;
-  color: black;
   padding: 15px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
+}
+
+.card-content{
+  font-weight: bolder;
+  font-size: 30px;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  background: rgb(253, 109, 109);
+  border: none;
+  border-radius: 100%;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  font-size: 24px;
+}
+
+.card-date {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  margin: 0;
+  font-size: 14px;
+  color: #000;
 }
 
 .form-overlay {
@@ -186,14 +283,58 @@ header {
   font-size: 24px;
 }
 
-.note {
+.title-input {
   border-radius: 5px;
-  border-color: #223358;
+  border: 1px solid #223358;
+  margin-bottom: 10px;
+  padding: 5px;
 }
 
-.form-error{
+.note {
+  border-radius: 5px;
+  border: 1px solid #223358;
+}
+
+.form-error {
   font-style: italic;
   font-weight: light;
   color: red;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.77);
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.note-detail {
+  width: 420px;
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.close-detail-btn {
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  border: none;
+  border-radius: 100%;
+  background-color: #223358;
+  color: white;
+  font-size: 24px;
 }
 </style>
