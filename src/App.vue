@@ -1,8 +1,34 @@
 <script setup>
-
-import { ref } from 'vue';
+import { ref } from "vue";
 
 const showForm = ref(false);
+
+const newNote = ref("");
+
+const notes = ref([]);
+
+const errorMsg = ref("");
+
+function addNotes(){
+  if(!newNote.value){
+    errorMsg.value = "Please enter a note";
+    return;
+  }
+  notes.value.push({
+    id: Date.now(),
+    note: newNote.value,
+    date: new Date().toLocaleDateString('en-GB'),
+    backgroundColor: getRandomColor(),
+  });
+
+  newNote.value = "";
+  showForm.value = false;
+}
+
+function getRandomColor(){
+  return `#${Math.floor(Math.random()*16777215).toString(16)}`
+}
+
 </script>
 
 <template>
@@ -13,35 +39,31 @@ const showForm = ref(false);
         <button @click="showForm = !showForm" class="add-btn" type="">+</button>
       </header>
       <div class="card-container">
-        <div class="card">
+        <div v-for="note in notes" :key="note.id" class="card" :style="{'background-color': note.backgroundColor}">
           <p class="card-content">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus,
-            numquam asperiores repellat, cupiditate animi fugit similique
+            {{ note.note }}
           </p>
-          <p class="card-date">27-07-2024</p>
-        </div>
-        <div class="card">
-          <p class="card-content">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus,
-            numquam asperiores repellat, cupiditate animi fugit similique
-          </p>
-          <p class="card-date">27-07-2024</p>
-        </div>
-        <div class="card">
-          <p class="card-content">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Ducimus,
-            numquam asperiores repellat, cupiditate animi fugit similique
-          </p>
-          <p class="card-date">27-07-2024</p>
+          <p class="card-date">{{ note.date }}</p>
         </div>
       </div>
     </div>
     <div v-if="showForm" class="form-overlay">
       <div class="form-modal">
         <h2 class="form-title">What happens today??</h2>
-        <button @click="showForm = !showForm" class="form-close-btn">&times;</button>
-        <textarea class="note" name="note" id="note" cols="30" rows="10"></textarea>
-        <button class="form-save-btn">Save</button>
+        <button @click="showForm = !showForm" class="form-close-btn">
+          &times;
+        </button>
+        <p v-if="errorMsg" class="form-error">{{ errorMsg }}</p>
+        <textarea
+          v-model="newNote"
+          class="note"
+          name="note"
+          id="note"
+          cols="30"
+          rows="10"
+          placeholder="Enter your note here..."
+        ></textarea>
+        <button @click="addNotes" class="form-save-btn">Save</button>
       </div>
     </div>
   </main>
@@ -97,7 +119,7 @@ header {
   height: 225px;
   background-color: #223358;
   border-radius: 10px;
-  color: white;
+  color: black;
   padding: 15px;
   margin-bottom: 20px;
   display: flex;
@@ -118,7 +140,7 @@ header {
   align-items: center;
 }
 
-.form-modal{
+.form-modal {
   width: 420px;
   background-color: white;
   border-radius: 10px;
@@ -128,14 +150,14 @@ header {
   flex-direction: column;
 }
 
-.form-title{
+.form-title {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 15px;
   align-self: center;
 }
 
-.form-save-btn{
+.form-save-btn {
   padding: 5px 10px;
   font-size: 20px;
   width: 30%;
@@ -150,7 +172,7 @@ header {
   align-self: center;
 }
 
-.form-close-btn{
+.form-close-btn {
   position: absolute;
   top: 5px;
   right: 10px;
@@ -164,8 +186,14 @@ header {
   font-size: 24px;
 }
 
-.note{
-  border-radius: 10px;
+.note {
+  border-radius: 5px;
   border-color: #223358;
+}
+
+.form-error{
+  font-style: italic;
+  font-weight: light;
+  color: red;
 }
 </style>
