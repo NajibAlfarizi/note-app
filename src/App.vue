@@ -29,6 +29,14 @@
         </div>
       </div>
     </div>
+    <div class="form-overlay">
+      <div class="form-modal">
+        <h2 class="form-title">What happens today??</h2>
+        <button class="form-close-btn">&times;</button>
+        <textarea class="note" name="note" id="note" cols="30" rows="10"></textarea>
+        <button class="form-save-btn">Save</button>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -88,5 +96,69 @@ header {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.form-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.77);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-modal{
+  width: 420px;
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-title{
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  align-self: center;
+}
+
+.form-save-btn{
+  padding: 5px 10px;
+  font-size: 20px;
+  width: 30%;
+  background-color: #223358;
+  border: none;
+  cursor: pointer;
+  border-radius: 10px;
+  margin-top: 15px;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-self: center;
+}
+
+.form-close-btn{
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  border: none;
+  border-radius: 100%;
+  background-color: #223358;
+  color: white;
+  font-size: 24px;
+}
+
+.note{
+  border-radius: 10px;
+  border-color: #223358;
 }
 </style>
