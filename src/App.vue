@@ -181,6 +181,22 @@ header {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
+  cursor: pointer;
+}
+
+.card-container .card {
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+.card-container .card:hover {
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 6px 6px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05) rotate(1deg);
+  background-color: lighten(0.1);
+}
+
+.card-container .card:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease-in-out;
 }
 
 .card {
